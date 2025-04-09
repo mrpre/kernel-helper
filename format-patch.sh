@@ -25,11 +25,19 @@ dstdir=""
 read -p "target patchsets dir (default: ${old_dstdir}): " dstdir
 dstdir=${dstdir:-$old_dstdir}
 
+cover=""
 coverletter=""
-read -p "need cover letter [Y/N] (default: y): " input
-case $input in
-  [Nn]) coverletter="" ;;
-  *) coverletter="--cover-letter" ;;
+read -p "need cover letter [Y/N] (default: ${old_cover}): " cover
+cover=${cover:-$old_cover}
+case $cover in
+  [Nn])
+        coverletter=""
+        cover="N"
+        ;;
+  *)
+        coverletter="--cover-letter"
+        cover="Y"
+        ;;
 esac
 
 gitcmd="git format-patch ${coverletter} --subject-prefix=\"PATCH ${branch}\" HEAD~${commitcnt} -v${version} -o ${dstdir}"
@@ -37,7 +45,7 @@ echo ${gitcmd}
 
 eval $gitcmd
 
-if [ -n $coverletter ]; then
+if [ "$cover" = "Y" ]; then
     read -p "subject of cover letter (default: ${old_cover_letter_subject}): " cover_letter_subject
     cover_letter_subject=${cover_letter_subject:-$old_cover_letter_subject}
 
@@ -73,6 +81,7 @@ if [ -n $jobname ]; then
     echo "old_coverletter=${coverletter}" >> ${saved_var}
     echo "old_cover_letter_subject=\"${cover_letter_subject}\""  >> ${saved_var}
     echo "old_cover_letter_file=${cover_letter_file}" >> ${saved_var}
+    echo "old_cover=${cover}" >> ${saved_var}
 fi
 
 ./scripts/checkpatch.pl --strict ${dstdir}/*
