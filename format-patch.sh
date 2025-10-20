@@ -40,7 +40,11 @@ case $cover in
         ;;
 esac
 
-gitcmd="git format-patch ${coverletter} --subject-prefix=\"PATCH ${branch}\" HEAD~${commitcnt} -v${version} -o ${dstdir}"
+if [ -n "$branch" ]; then
+    gitcmd="git format-patch ${coverletter} --subject-prefix=\"PATCH ${branch}\" HEAD~${commitcnt} -v${version} -o ${dstdir}"
+else
+    gitcmd="git format-patch ${coverletter} HEAD~${commitcnt} -v${version} -o ${dstdir}"
+fi
 echo ${gitcmd}
 
 eval $gitcmd
@@ -85,3 +89,9 @@ if [ -n $jobname ]; then
 fi
 
 ./scripts/checkpatch.pl --strict ${dstdir}/*
+
+echo -e '\n\n***********\n'
+echo "Fast send cmd: git send-email --to xxx@vger.kernel.org --cc-cmd='./scripts/get_maintainer.pl --norolestats ${dstdir}/*'  ${dstdir}/*"
+
+echo -e '\n***********\n'
+./scripts/get_maintainer.pl --norolestats ${dstdir}/*
