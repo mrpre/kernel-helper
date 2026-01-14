@@ -60,7 +60,7 @@ if [ "$cover" = "Y" ]; then
     if [ -n "$cover_letter_subject" ]; then
         content=$cover_letter_subject
         if [ -n $target_file ];then
-            sed -i  "s/\*\*\* SUBJECT HERE \*\*\*/$content/g" $target_file
+            sed -i  "s|\*\*\* SUBJECT HERE \*\*\*|$content|g" $target_file
         fi
     fi
     if [ -n "$cover_letter_file" ]; then
