@@ -22,7 +22,7 @@ read -p "how many commit to be formated [1,2,3...] (default: ${old_commitcnt}): 
 commitcnt=${commitcnt:-$old_commitcnt}
 
 dstdir=""
-read -p "target patchsets dir (default: ${old_dstdir}): " dstdir
+read -p "target patchsets dir,eg $HOME/code/patch/ (default: ${old_dstdir}): " dstdir
 dstdir=${dstdir:-$old_dstdir}
 
 cover=""
@@ -40,10 +40,21 @@ case $cover in
         ;;
 esac
 
+base=""
+#base="--base=auto"
+
+RFC=""
+vstr=""
+if [ "$version" = "RFC" ]; then
+	RFC="RFC "
+elif [ -n "$version" ]; then
+	vstr="-v${version}"
+fi
+
 if [ -n "$branch" ]; then
-    gitcmd="git format-patch ${coverletter} --subject-prefix=\"PATCH ${branch}\" HEAD~${commitcnt} -v${version} -o ${dstdir}"
+    gitcmd="git format-patch ${coverletter} ${base} --subject-prefix=\"${RFC}PATCH ${branch}\" HEAD~${commitcnt} ${vstr} -o ${dstdir}"
 else
-    gitcmd="git format-patch ${coverletter} HEAD~${commitcnt} -v${version} -o ${dstdir}"
+    gitcmd="git format-patch ${coverletter} ${base} --subject-prefix=\"${RFC}PATCH\" HEAD~${commitcnt} ${vstr} -o ${dstdir}"
 fi
 echo ${gitcmd}
 
@@ -56,7 +67,7 @@ if [ "$cover" = "Y" ]; then
     read -p "file contain the detail of cover letter (default: ${old_cover_letter_file}): " cover_letter_file
     cover_letter_file=${cover_letter_file:-$old_cover_letter_file}
 
-    target_file=`find $dstdir -maxdepth 1 -name '*-0000-cover-letter.patch' -print -quit`
+    target_file=`find $dstdir -maxdepth 1 -name '*0000-cover-letter.patch' -print -quit`
     if [ -n "$cover_letter_subject" ]; then
         content=$cover_letter_subject
         if [ -n $target_file ];then
@@ -86,6 +97,12 @@ if [ -n $jobname ]; then
     echo "old_cover_letter_subject=\"${cover_letter_subject}\""  >> ${saved_var}
     echo "old_cover_letter_file=${cover_letter_file}" >> ${saved_var}
     echo "old_cover=${cover}" >> ${saved_var}
+fi
+
+
+if grep -ri -q -E "cursor|claude" ${dstdir}/ 2>/dev/null; then
+    echo "ERROR: Found forbidden keywords!"
+    exit 1
 fi
 
 ./scripts/checkpatch.pl --strict ${dstdir}/*
