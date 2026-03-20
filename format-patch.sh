@@ -105,6 +105,14 @@ if grep -ri -q -E "cursor|claude" ${dstdir}/ 2>/dev/null; then
     exit 1
 fi
 
+# Run shellcheck on any .sh files touched by the commits
+for f in $(git diff --name-only --diff-filter=AM HEAD~${commitcnt} -- '*.sh'); do
+    if [ -f "$f" ]; then
+        echo "shellcheck: checking $f ..."
+        (cd "$(dirname "$f")" && shellcheck -x -e SC2317 "$(basename "$f")")
+    fi
+done
+
 ./scripts/checkpatch.pl --strict ${dstdir}/*
 
 echo -e '\n\n***********\n'
